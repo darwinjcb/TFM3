@@ -1,0 +1,40 @@
+// prisma/esquema-profesor.prisma:
+generator profesorClient {
+  provider = "prisma-client-js"
+  //output   = "./generated/profesor"
+   output   = "../node_modules/@prisma/client-profesor"
+ 
+}
+
+datasource dbProfesor {
+  provider = "postgresql"
+}
+
+// =========================
+//   MODELOS PROFESOR / TITULO
+// =========================
+
+// Profesor de la universidad
+model Profesor {
+  id            Int      @id @default(autoincrement())
+  nombres       String
+  apellidos     String
+  email         String   @unique
+  telefono      String?
+  activo        Boolean  @default(true)
+  creadoEn      DateTime @default(now())
+  actualizadoEn DateTime @updatedAt
+
+  // Un profesor puede tener varios títulos académicos
+  titulos Titulo[]
+}
+
+// Título académico del profesor (Lic., Ing., Mgtr., etc.)
+model Titulo {
+  id            Int     @id @default(autoincrement())
+  nombre        String // "Ingeniero en Sistemas", "Magíster en ..."
+  institucion   String?
+  anioObtencion Int?
+  profesorId Int
+  profesor   Profesor @relation(fields: [profesorId], references: [id])
+}

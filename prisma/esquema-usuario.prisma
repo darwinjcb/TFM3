@@ -1,0 +1,91 @@
+// prisma/esquema-usuario.prisma:
+
+// === GENERATOR Y DATASOURCE ===
+generator usuarioClient {
+  provider = "prisma-client-js"
+  //output   = "./generated/usuario"
+  output   = "../node_modules/@prisma/client-usuario"
+}
+
+datasource dbUsuario {
+  provider = "postgresql"
+}
+
+// === ENUMS ===
+
+enum TipoUsuario {
+  ESTUDIANTE
+  PROFESOR
+  OTRO
+}
+
+// === MODELOS ===
+
+// Usuario del sistema (cuenta que inicia sesión)
+model Usuario {
+  id           Int         @id @default(autoincrement())
+  nombre       String
+  email        String      @unique
+  passwordHash String
+  tipoUsuario  TipoUsuario @default(OTRO)
+  // Rol de seguridad (lector, admin, operador, etc.)
+  rolId Int
+  rol   Rol @relation(fields: [rolId], references: [id])
+
+  // ID del profesor en la otra base (BD-Profesor), si aplica
+  profesorId Int? // solo se usa cuando tipoUsuario = PROFESOR
+
+  activo        Boolean  @default(true)
+  creadoEn      DateTime @default(now())
+  actualizadoEn DateTime @updatedAt
+
+  // Relación 1:N con Inscripcion (un usuario puede tener varias)
+  inscripciones Inscripcion[]
+}
+
+// Inscripción del usuario en una carrera/ciclo
+model Inscripcion {
+  id        Int     @id @default(autoincrement())
+  usuarioId Int
+  usuario   Usuario @relation(fields: [usuarioId], references: [id])
+
+  // IDs que apuntan a tablas en la BD de CARRERA
+  carreraId Int // id de Carrera en BD-Carrera
+  cicloId   Int // id de Ciclo en BD-Carrera
+
+  fechaInicio DateTime @default(now())
+  activo      Boolean  @default(true)
+}
+
+// Rol de seguridad (perfil del sistema)
+model Rol {
+  id          Int     @id @default(autoincrement())
+  nombre      String  @unique // LECTOR, OPERADOR_BIBLIOTECA, ADMIN...
+  descripcion String?
+  esSistema   Boolean @default(true)
+  // Usuarios que tienen este rol
+  usuarios Usuario[]
+  // Relación muchos-a-muchos con Permiso vía RolPermiso
+  permisos RolPermiso[]
+}
+
+// Acción específica permitida en el sistema
+model Permiso {
+  id          Int     @id @default(autoincrement())
+  codigo      String  @unique // VER_CATALOGO, RESERVAR_LIBRO, etc.
+  descripcion String?
+  categoria   String? // LIBROS, USUARIOS, CARRERAS...
+
+  roles RolPermiso[]
+}
+
+// Tabla intermedia Rol-Permiso (N:M)
+model RolPermiso {
+  id        Int @id @default(autoincrement())
+  rolId     Int
+  permisoId Int
+  rol     Rol     @relation(fields: [rolId], references: [id])
+  permiso Permiso @relation(fields: [permisoId], references: [id])
+
+  @@unique([rolId, permisoId]) // evita repetir el mismo permiso en un rol
+}
