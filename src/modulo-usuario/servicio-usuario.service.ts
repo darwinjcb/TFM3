@@ -1,5 +1,4 @@
 // src/modulo-usuario/servicio-usuario.service.ts
-
 import { Injectable } from '@nestjs/common';
 import { ServicioPrismaUsuario } from '../modulo-prisma/servicio-usuario/servicio-prisma-usuario.service';
 import { ServicioPrismaCarrera } from '../modulo-prisma/servicio-carrera/servicio-prisma-carrera.service';
@@ -21,7 +20,7 @@ export class ServicioUsuario {
     const estudiantes = await this.prisma.usuario.findMany({
       where: {
         activo: true,
-        rol: { nombre: 'ESTUDIANTE' }, // ✅ como pidió tu docente
+        rol: { nombre: 'ESTUDIANTE' },
         inscripciones: { some: { activo: true } },
       },
       select: {
@@ -37,6 +36,7 @@ export class ServicioUsuario {
         inscripciones: {
           where: { activo: true },
           select: {
+            id: true,
             carreraId: true,
             cicloId: true,
             fechaInicio: true,
@@ -48,9 +48,7 @@ export class ServicioUsuario {
     });
 
     const carreraIds = [
-      ...new Set(
-        estudiantes.flatMap((e) => e.inscripciones.map((i) => i.carreraId)),
-      ),
+      ...new Set(estudiantes.flatMap((e) => e.inscripciones.map((i) => i.carreraId))),
     ];
 
     if (carreraIds.length === 0) {
@@ -81,18 +79,9 @@ export class ServicioUsuario {
   }
 
   // ============================
-  // PARTE 2 – OPERADORES LÓGICOS
+  // PARTE 2 – OPERADORES LÓGICOS (AND)
   // ============================
-  // AND:
-  // Buscar estudiantes que estén:
-  // - activos
-  // - con rol ESTUDIANTE
-  // - pertenecen a una carrera específica
-  // - y estén matriculados en un ciclo específico (tu “período académico”)
-  async buscarEstudiantesActivosPorCarreraYCiclo(
-    carreraId: number,
-    cicloId: number,
-  ) {
+  async buscarEstudiantesActivosPorCarreraYCiclo(carreraId: number, cicloId: number) {
     return this.prisma.usuario.findMany({
       where: {
         AND: [
@@ -128,6 +117,87 @@ export class ServicioUsuario {
       },
       orderBy: { id: 'asc' },
     });
+  }
+
+  // ============================
+  // PARTE 3 – CONSULTA NATIVA SQL
+  // ============================
+  // Reporte: Nombre estudiante, Carrera, Total materias matriculadas (DESC)
+  async reporteMateriasMatriculadas() {
+    // SQL NATIVO ejecutado en BD-Carrera
+    const rows = await this.prismaCarrera.$queryRaw<
+      Array<{
+        inscripcionId: number;
+        carreraId: number;
+        carrera: string;
+        totalMaterias: number;
+      }>
+    >`
+      SELECT
+        m."inscripcionId" AS "inscripcionId",
+        m."carreraId"     AS "carreraId",
+        c."nombre"        AS "carrera",
+        COUNT(*)::int     AS "totalMaterias"
+      FROM "Materia" m
+      JOIN "Carrera" c ON c."id" = m."carreraId"
+      WHERE m."inscripcionId" IS NOT NULL
+        AND m."activo" = true
+      GROUP BY m."inscripcionId", m."carreraId", c."nombre"
+      ORDER BY "totalMaterias" DESC;
+    `;
+
+    if (rows.length === 0) return [];
+
+    // Traer inscripciones en BD-Usuario para mapear inscripcionId -> usuarioId
+    const inscripcionIds = [...new Set(rows.map((r) => r.inscripcionId))];
+
+    const inscripciones = await this.prisma.inscripcion.findMany({
+      where: { id: { in: inscripcionIds } },
+      select: { id: true, usuarioId: true },
+    });
+
+    const insMap = new Map(inscripciones.map((i) => [i.id, i.usuarioId]));
+
+    // Agrupar por usuario + carrera
+    const agg = new Map<string, { usuarioId: number; carrera: string; totalMaterias: number }>();
+
+    for (const r of rows) {
+      const usuarioId = insMap.get(r.inscripcionId);
+      if (!usuarioId) continue;
+
+      const key = `${usuarioId}-${r.carreraId}`;
+      const prev = agg.get(key);
+
+      if (!prev) {
+        agg.set(key, { usuarioId, carrera: r.carrera, totalMaterias: r.totalMaterias });
+      } else {
+        prev.totalMaterias += r.totalMaterias;
+      }
+    }
+
+    const agregados = [...agg.values()];
+    if (agregados.length === 0) return [];
+
+    // Traer nombres de estudiantes
+    const usuarioIds = [...new Set(agregados.map((a) => a.usuarioId))];
+
+    const usuarios = await this.prisma.usuario.findMany({
+      where: { id: { in: usuarioIds } },
+      select: { id: true, nombre: true },
+    });
+
+    const userMap = new Map(usuarios.map((u) => [u.id, u.nombre]));
+
+    // Respuesta final ordenada DESC por totalMaterias
+    const reporte = agregados.map((a) => ({
+      estudiante: userMap.get(a.usuarioId) ?? `Usuario ${a.usuarioId}`,
+      carrera: a.carrera,
+      totalMaterias: a.totalMaterias,
+    }));
+
+    reporte.sort((x, y) => y.totalMaterias - x.totalMaterias);
+
+    return reporte;
   }
 
   // ============================

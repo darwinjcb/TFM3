@@ -28,7 +28,6 @@ model Profesor {
   tiempoCompleto Boolean  @default(false) // ✅ NUEVO
 }
 
-// Título académico del profesor (Lic., Ing., Mgtr., etc.)
 model Titulo {
   id            Int      @id @default(autoincrement())
   nombre        String // "Ingeniero en Sistemas", "Magíster en ..."

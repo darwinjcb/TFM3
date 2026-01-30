@@ -16,7 +16,7 @@ import { UpdateUsuarioDto } from './update-usuario.dto';
 
 @Controller('usuarios')
 export class ControladorUsuarioController {
-  constructor(private readonly servicioUsuario: ServicioUsuario) {}
+  constructor(private readonly servicioUsuario: ServicioUsuario) { }
 
   // ============================
   // CONSULTA DERIVADA – PARTE 1
@@ -40,6 +40,15 @@ export class ControladorUsuarioController {
       carreraId,
       cicloId,
     );
+  }
+
+  // ============================
+  // PARTE 3 – CONSULTA NATIVA SQL
+  // ============================
+  // GET /usuarios/reporte/materias-matriculadas
+  @Get('reporte/materias-matriculadas')
+  reporteMateriasMatriculadas() {
+    return this.servicioUsuario.reporteMateriasMatriculadas();
   }
 
   // ============================
