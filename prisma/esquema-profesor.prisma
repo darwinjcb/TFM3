@@ -9,11 +9,8 @@ datasource dbProfesor {
   provider = "postgresql"
 }
 
-// =========================
 //   MODELOS PROFESOR / TITULO
-// =========================
-
-// Modelo de Profesor:
+// Modelo del Profesor:
 model Profesor {
   id             Int      @id @default(autoincrement())
   nombres        String
@@ -23,14 +20,13 @@ model Profesor {
   activo         Boolean  @default(true)
   creadoEn       DateTime @default(now())
   actualizadoEn  DateTime @updatedAt
-  // Un profesor puede tener varios títulos académicos
   titulos        Titulo[]
-  tiempoCompleto Boolean  @default(false) // ✅ NUEVO
+  tiempoCompleto Boolean  @default(false) 
 }
 
 model Titulo {
   id            Int      @id @default(autoincrement())
-  nombre        String // "Ingeniero en Sistemas", "Magíster en ..."
+  nombre        String 
   institucion   String?
   anioObtencion Int?
   profesorId    Int

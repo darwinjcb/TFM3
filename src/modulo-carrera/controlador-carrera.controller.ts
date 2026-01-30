@@ -40,9 +40,7 @@ export class ControladorCarreraController {
     return this.servicioCarrera.actualizar(Number(id), data);
   }
 
-  // ============================
-  // PARTE 4 – TRANSACCIÓN
-  // ============================
+  // PARTE 4: TRANSACCIÓN
   // POST /carreras/matricular
   @Post('matricular')
   matricular(@Body() body: { usuarioId: number; materiaId: number; carreraId: number; cicloId: number }) {

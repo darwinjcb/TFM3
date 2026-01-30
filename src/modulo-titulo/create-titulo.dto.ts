@@ -9,7 +9,7 @@ import {
 export class CreateTituloDto {
     @IsString()
     @MaxLength(150)
-    nombre: string; // "Ingeniero en Sistemas", "Magíster en ..."
+    nombre: string; 
 
     @IsOptional()
     @IsString()
@@ -23,5 +23,5 @@ export class CreateTituloDto {
 
     @IsInt()
     @Min(1)
-    profesorId: number; // fk al profesor
+    profesorId: number;
 }

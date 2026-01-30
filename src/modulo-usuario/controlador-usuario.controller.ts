@@ -18,7 +18,6 @@ import { UpdateUsuarioDto } from './update-usuario.dto';
 export class ControladorUsuarioController {
   constructor(private readonly servicioUsuario: ServicioUsuario) { }
 
-  // ============================
   // CONSULTA DERIVADA – PARTE 1
   // ============================
   // GET /usuarios/estudiantes/activos/carrera
@@ -27,8 +26,7 @@ export class ControladorUsuarioController {
     return this.servicioUsuario.listarEstudiantesActivosConCarrera();
   }
 
-  // ============================
-  // PARTE 2 – OPERADORES LÓGICOS (AND)
+  // PARTE 2: OPERADORES LÓGICOS (AND)
   // ============================
   // GET /usuarios/estudiantes/buscar?carreraId=1&cicloId=2
   @Get('estudiantes/buscar')
@@ -42,18 +40,14 @@ export class ControladorUsuarioController {
     );
   }
 
-  // ============================
-  // PARTE 3 – CONSULTA NATIVA SQL
-  // ============================
+  // PARTE 3: CONSULTA NATIVA SQL
   // GET /usuarios/reporte/materias-matriculadas
   @Get('reporte/materias-matriculadas')
   reporteMateriasMatriculadas() {
     return this.servicioUsuario.reporteMateriasMatriculadas();
   }
 
-  // ============================
-  // CRUD EXISTENTE
-  // ============================
+  // CRUD EXISTENTE:
 
   @Get()
   obtenerTodos() {

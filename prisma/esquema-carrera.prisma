@@ -9,9 +9,7 @@ datasource dbCarrera {
   provider = "postgresql"
 }
 
-// =========================
 //   MODELOS CARRERA / CICLO / MATERIA
-// =========================
 
 model Carrera {
   id            Int       @id @default(autoincrement())
@@ -29,10 +27,8 @@ model Ciclo {
   id     Int     @id @default(autoincrement())
   numero Int
   nombre String?
-
   carreraId Int
   carrera   Carrera @relation(fields: [carreraId], references: [id])
-
   materias Materia[]
 }
 
@@ -41,7 +37,6 @@ model Materia {
   nombre   String
   codigo   String @unique
   creditos Int    @default(3)
-
   carreraId Int
   carrera   Carrera @relation(fields: [carreraId], references: [id])
 
@@ -54,7 +49,7 @@ model Materia {
   // Docente (ID externo de BD-Profesor)
   profesorId Int?
 
-  // ✅ Cupos para matriculación (Parte 4)
+  // Cupos para matriculación (Parte 4)
   cuposDisponibles Int @default(30)
 
   activo Boolean @default(true)

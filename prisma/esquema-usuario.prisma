@@ -20,8 +20,6 @@ enum TipoUsuario {
 }
 
 // === MODELOS ===
-
-// Usuario del sistema (cuenta que inicia sesión)
 model Usuario {
   id           Int         @id @default(autoincrement())
   nombre       String
@@ -34,7 +32,6 @@ model Usuario {
 
   // ID del profesor en la otra base (BD-Profesor), si aplica
   profesorId Int? // solo se usa cuando tipoUsuario = PROFESOR
-
   activo        Boolean  @default(true)
   creadoEn      DateTime @default(now())
   actualizadoEn DateTime @updatedAt
@@ -43,7 +40,6 @@ model Usuario {
   inscripciones Inscripcion[]
 }
 
-// Inscripción del usuario en una carrera/ciclo
 model Inscripcion {
   id        Int     @id @default(autoincrement())
   usuarioId Int
@@ -74,8 +70,7 @@ model Permiso {
   id          Int     @id @default(autoincrement())
   codigo      String  @unique // VER_CATALOGO, RESERVAR_LIBRO, etc.
   descripcion String?
-  categoria   String? // LIBROS, USUARIOS, CARRERAS...
-
+  categoria   String? 
   roles RolPermiso[]
 }
 
@@ -86,6 +81,5 @@ model RolPermiso {
   permisoId Int
   rol     Rol     @relation(fields: [rolId], references: [id])
   permiso Permiso @relation(fields: [permisoId], references: [id])
-
   @@unique([rolId, permisoId]) // evita repetir el mismo permiso en un rol
 }

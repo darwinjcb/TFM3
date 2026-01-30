@@ -72,7 +72,7 @@ export class ServicioCarreraService {
     });
   }
 
-  // DELETE /carreras/:id — BORRADO FÍSICO REAL
+  // DELETE /carreras/:id — BORRADO FÍSICO es
   async eliminar(id: number) {
     await this.prisma.materia.deleteMany({ where: { carreraId: id } });
     await this.prisma.ciclo.deleteMany({ where: { carreraId: id } });
@@ -82,9 +82,7 @@ export class ServicioCarreraService {
     });
   }
 
-  // ============================
-  // PARTE 4 – TRANSACCIÓN (MATRICULACIÓN)
-  // ============================
+  // PARTE 4: TRANSACCIÓN (MATRICULACIÓN)
   // Reglas:
   // 1) Verificar estudiante activo (BD-Usuario)
   // 2) Verificar cupos disponibles (BD-Carrera)
@@ -161,7 +159,7 @@ export class ServicioCarreraService {
         throw new Error('No hay cupos disponibles en la materia.');
       }
 
-      // 3.2 Registrar matrícula + descontar cupo
+      // Registrar matrícula + descontar cupo
       const matricula = await tx.materia.update({
         where: { id: materiaId },
         data: {

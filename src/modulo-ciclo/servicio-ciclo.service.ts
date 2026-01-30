@@ -1,4 +1,4 @@
-// src/modulo-ciclo/servicio-ciclo.service.ts
+// src/modulo-ciclo/servicio-ciclo.service.ts:
 
 import { Injectable } from '@nestjs/common';
 import { ServicioPrismaCarrera } from '../modulo-prisma/servicio-carrera/servicio-prisma-carrera.service';
@@ -74,12 +74,12 @@ export class ServicioCicloService {
 
   // DELETE físico /ciclos/:id
   async eliminar(id: number) {
-    // Primero eliminamos las materias asociadas a este ciclo
+    // Eliminación de materias asociadas a este ciclo
     await this.prisma.materia.deleteMany({
       where: { cicloId: id },
     });
 
-    // Luego eliminamos el ciclo
+    // Eliminación del ciclo
     return this.prisma.ciclo.delete({
       where: { id },
     });

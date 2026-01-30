@@ -11,7 +11,7 @@ export class CreateUsuarioDto {
 
     @IsString()
     @MinLength(6)
-    password: string; // luego la convertiremos a hash
+    password: string;
 
     @IsInt()
     rolId: number;
