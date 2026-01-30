@@ -1,12 +1,13 @@
+// src/modulo-carrera/controlador-carrera.controller.ts:
+
 import {
-  Body,
   Controller,
   Get,
-  Param,
-  Patch,
   Post,
+  Patch,
   Delete,
-  ParseIntPipe,
+  Param,
+  Body,
 } from '@nestjs/common';
 import { ServicioCarreraService } from './servicio-carrera.service';
 import { CreateCarreraDto } from './create-carrera.dto';
@@ -14,33 +15,42 @@ import { UpdateCarreraDto } from './update-carrera.dto';
 
 @Controller('carreras')
 export class ControladorCarreraController {
-  constructor(private readonly servicio: ServicioCarreraService) {}
+  constructor(
+    private readonly servicioCarrera: ServicioCarreraService,
+  ) { }
 
+  // GET /carreras
   @Get()
   obtenerTodos() {
-    return this.servicio.obtenerTodos();
+    return this.servicioCarrera.obtenerTodos();
   }
 
+  // GET /carreras/:id
   @Get(':id')
-  obtenerPorId(@Param('id', ParseIntPipe) id: number) {
-    return this.servicio.obtenerPorId(id);
+  obtenerPorId(@Param('id') id: string) {
+    return this.servicioCarrera.obtenerPorId(Number(id));
   }
 
+  // ✅ GET /carreras/:id/materias
+  // Parte 1 – Consulta derivada:
+  // "Obtener las materias asociadas a una carrera específica"
+  @Get(':id/materias')
+  obtenerMateriasPorCarrera(@Param('id') id: string) {
+    return this.servicioCarrera.obtenerMateriasPorCarrera(Number(id));
+  }
+
+  // POST /carreras
   @Post()
   crear(@Body() data: CreateCarreraDto) {
-    return this.servicio.crear(data);
+    return this.servicioCarrera.crear(data);
   }
 
+  // PATCH /carreras/:id
   @Patch(':id')
   actualizar(
-    @Param('id', ParseIntPipe) id: number,
+    @Param('id') id: string,
     @Body() data: UpdateCarreraDto,
   ) {
-    return this.servicio.actualizar(id, data);
-  }
-
-  @Delete(':id')
-  eliminar(@Param('id', ParseIntPipe) id: number) {
-    return this.servicio.eliminar(id);
+    return this.servicioCarrera.actualizar(Number(id), data);
   }
 }

@@ -1,3 +1,5 @@
+// src/modulo-inscripcion/controlador-inscripcion.controller.ts:
+
 import {
     Body,
     Controller,
@@ -15,6 +17,22 @@ import { UpdateInscripcionDto } from './update-inscripcion.dto';
 @Controller('inscripciones')
 export class ControladorInscripcionController {
     constructor(private readonly servicio: ServicioInscripcionService) { }
+
+    // ============================
+    // CONSULTA DERIVADA – PARTE 1
+    // ============================
+    // GET /inscripciones/usuario/:usuarioId/ciclo/:cicloId
+    @Get('usuario/:usuarioId/ciclo/:cicloId')
+    obtenerMatriculasPorCiclo(
+        @Param('usuarioId', ParseIntPipe) usuarioId: number,
+        @Param('cicloId', ParseIntPipe) cicloId: number,
+    ) {
+        return this.servicio.obtenerMatriculasPorCiclo(usuarioId, cicloId);
+    }
+
+    // ============================
+    // CRUD EXISTENTE
+    // ============================
 
     // POST /inscripciones
     @Post()

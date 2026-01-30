@@ -23,6 +23,28 @@ export class ServicioCarreraService {
     });
   }
 
+  // ✅ GET /carreras/:id/materias
+  // Parte 1 (Consulta derivada): "Obtener las materias asociadas a una carrera específica"
+  obtenerMateriasPorCarrera(id: number) {
+    return this.prisma.materia.findMany({
+      where: {
+        carreraId: id,
+        // si quieres incluir también inactivas, quita esta línea:
+        activo: true,
+      },
+      include: {
+        ciclo: true,
+        carrera: {
+          select: {
+            id: true,
+            nombre: true,
+          },
+        },
+      },
+      orderBy: { id: 'asc' },
+    });
+  }
+
   // POST /carreras
   crear(data: CreateCarreraDto) {
     return this.prisma.carrera.create({

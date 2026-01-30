@@ -2,10 +2,8 @@
 
 generator carreraClient {
   provider = "prisma-client-js"
- // output   = "./generated/carrera"
-   output   = "../node_modules/@prisma/client-carrera"
-
-
+  // output   = "./generated/carrera"
+  output   = "../node_modules/@prisma/client-carrera"
 }
 
 datasource dbCarrera {
@@ -18,16 +16,15 @@ datasource dbCarrera {
 
 // Carrera universitaria (p. ej. Desarrollo de Software)
 model Carrera {
-  id            Int      @id @default(autoincrement())
-  nombre        String   @unique
+  id            Int       @id @default(autoincrement())
+  nombre        String    @unique
   descripcion   String?
   facultad      String?
-  activo        Boolean  @default(true)
-  creadoEn      DateTime @default(now())
-  actualizadoEn DateTime @updatedAt
-
-  ciclos   Ciclo[]
-  materias Materia[]
+  activo        Boolean   @default(true)
+  creadoEn      DateTime  @default(now())
+  actualizadoEn DateTime  @updatedAt
+  ciclos        Ciclo[]
+  materias      Materia[]
 }
 
 // Ciclo o semestre dentro de una carrera
@@ -44,20 +41,18 @@ model Ciclo {
 
 // Materia (asignatura) de una carrera en un ciclo
 model Materia {
-  id       Int    @id @default(autoincrement())
-  nombre   String
-  codigo   String @unique // "DS101", "MAT201", etc.
-  creditos Int    @default(3)
-
+  id        Int     @id @default(autoincrement())
+  nombre    String
+  codigo    String  @unique // "DS101", "MAT201", etc.
+  creditos  Int     @default(3)
   carreraId Int
   carrera   Carrera @relation(fields: [carreraId], references: [id])
-
-  cicloId Int
-  ciclo   Ciclo @relation(fields: [cicloId], references: [id])
+  cicloId   Int
+  ciclo     Ciclo   @relation(fields: [cicloId], references: [id])
 
   // Este campo vincula la materia con una Inscripcion específica
   // en la otra base (BD-Usuario). Es SOLO un ID, la relación se maneja en NestJS.
   inscripcionId Int?
-
+  profesorId    Int? // id de Profesor en BD-Profesor (solo el ID)
   activo Boolean @default(true)
 }

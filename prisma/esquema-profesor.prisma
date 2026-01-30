@@ -14,7 +14,7 @@ datasource dbProfesor {
 //   MODELOS PROFESOR / TITULO
 // =========================
 
-// Profesor de la universidad
+// Modelo de Profesor:
 model Profesor {
   id            Int      @id @default(autoincrement())
   nombres       String
@@ -24,7 +24,6 @@ model Profesor {
   activo        Boolean  @default(true)
   creadoEn      DateTime @default(now())
   actualizadoEn DateTime @updatedAt
-
   // Un profesor puede tener varios títulos académicos
   titulos Titulo[]
 }
