@@ -15,9 +15,7 @@ import { UpdateProfesorDto } from './update-profesor.dto';
 
 @Controller('profesores')
 export class ControladorProfesor {
-    constructor(
-        private readonly servicioProfesor: ServicioProfesor,
-    ) { }
+    constructor(private readonly servicioProfesor: ServicioProfesor) { }
 
     // ============================
     // CONSULTA DERIVADA – PARTE 1
@@ -29,28 +27,33 @@ export class ControladorProfesor {
     }
 
     // ============================
+    // PARTE 2 – OPERADORES LÓGICOS
+    // ============================
+    // GET /profesores/filtrar-logicos
+    @Get('filtrar-logicos')
+    filtrarDocentesTiempoCompleto_AND_OR_NOT() {
+        return this.servicioProfesor.filtrarDocentesTiempoCompleto_AND_OR_NOT();
+    }
+
+    // ============================
     // CRUD EXISTENTE
     // ============================
 
-    // GET /profesores
     @Get()
     obtenerTodos() {
         return this.servicioProfesor.obtenerTodos();
     }
 
-    // GET /profesores/:id
     @Get(':id')
     obtenerPorId(@Param('id') id: string) {
         return this.servicioProfesor.obtenerPorId(Number(id));
     }
 
-    // POST /profesores
     @Post()
     crear(@Body() data: CreateProfesorDto) {
         return this.servicioProfesor.crear(data);
     }
 
-    // PATCH /profesores/:id
     @Patch(':id')
     actualizar(
         @Param('id') id: string,
@@ -59,7 +62,6 @@ export class ControladorProfesor {
         return this.servicioProfesor.actualizar(Number(id), data);
     }
 
-    // DELETE /profesores/:id
     @Delete(':id')
     eliminar(@Param('id') id: string) {
         return this.servicioProfesor.eliminar(Number(id));

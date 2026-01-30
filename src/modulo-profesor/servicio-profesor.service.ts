@@ -17,21 +17,18 @@ export class ServicioProfesor {
     // CRUD EXISTENTE
     // ============================
 
-    // GET /profesores
     obtenerTodos() {
         return this.prismaProfesor.profesor.findMany({
             orderBy: { id: 'asc' },
         });
     }
 
-    // GET /profesores/:id
     obtenerPorId(id: number) {
         return this.prismaProfesor.profesor.findUnique({
             where: { id },
         });
     }
 
-    // POST /profesores
     crear(data: CreateProfesorDto) {
         return this.prismaProfesor.profesor.create({
             data: {
@@ -39,17 +36,19 @@ export class ServicioProfesor {
                 apellidos: data.apellidos,
                 email: data.email,
                 telefono: data.telefono ?? null,
+                // tiempoCompleto se setea por defecto si lo agregaste en el schema
             },
         });
     }
 
-    // PATCH /profesores/:id
     async actualizar(id: number, data: UpdateProfesorDto) {
         const updateData: Partial<{
             nombres: string;
             apellidos: string;
             email: string;
             telefono: string | null;
+            tiempoCompleto: boolean;
+            activo: boolean;
         }> = {};
 
         if (data.nombres !== undefined) updateData.nombres = data.nombres;
@@ -57,13 +56,21 @@ export class ServicioProfesor {
         if (data.email !== undefined) updateData.email = data.email;
         if (data.telefono !== undefined) updateData.telefono = data.telefono;
 
+        // Si tu UpdateProfesorDto ya tiene estos campos, se aplican.
+        // Si no los tiene, no pasa nada (solo no se actualizan).
+        if ((data as any).tiempoCompleto !== undefined) {
+            updateData.tiempoCompleto = (data as any).tiempoCompleto;
+        }
+        if ((data as any).activo !== undefined) {
+            updateData.activo = (data as any).activo;
+        }
+
         return this.prismaProfesor.profesor.update({
             where: { id },
             data: updateData,
         });
     }
 
-    // DELETE /profesores/:id
     async eliminar(id: number) {
         await this.prismaProfesor.titulo.deleteMany({
             where: { profesorId: id },
@@ -79,7 +86,6 @@ export class ServicioProfesor {
     // ============================
     // "Listar los docentes que imparten más de una asignatura"
     async listarDocentesConMasDeUnaAsignatura() {
-        // 1. Obtener materias activas con profesor asignado (BD Carrera)
         const materias = await this.prismaCarrera.materia.findMany({
             where: {
                 activo: true,
@@ -90,30 +96,67 @@ export class ServicioProfesor {
             },
         });
 
-        // 2. Contar materias por profesor
         const conteo = new Map<number, number>();
         for (const m of materias) {
             const id = m.profesorId!;
             conteo.set(id, (conteo.get(id) ?? 0) + 1);
         }
 
-        // 3. Profesores con más de una materia
         const profesoresIds = [...conteo.entries()]
             .filter(([, total]) => total > 1)
             .map(([id]) => id);
 
         if (profesoresIds.length === 0) return [];
 
-        // 4. Obtener profesores desde BD Profesor
         const profesores = await this.prismaProfesor.profesor.findMany({
             where: { id: { in: profesoresIds } },
             orderBy: { id: 'asc' },
         });
 
-        // 5. Respuesta final
         return profesores.map((p) => ({
             ...p,
             totalMaterias: conteo.get(p.id) ?? 0,
         }));
+    }
+
+    // ============================
+    // PARTE 2 – OPERADORES LÓGICOS (AND / OR / NOT)
+    // ============================
+    // Filtrar docentes que:
+    // - sean de tiempo completo AND
+    // - dicten asignaturas OR (o tengan títulos, para evidenciar OR con datos reales)
+    // - NO estén inactivos (NOT)
+    async filtrarDocentesTiempoCompleto_AND_OR_NOT() {
+        // Docentes que dictan asignaturas (aparecen en Materia.profesorId)
+        const materias = await this.prismaCarrera.materia.findMany({
+            where: {
+                activo: true,
+                profesorId: { not: null },
+            },
+            select: { profesorId: true },
+        });
+
+        const profesoresConMaterias = [
+            ...new Set(materias.map((m) => m.profesorId!).filter(Boolean)),
+        ];
+
+        return this.prismaProfesor.profesor.findMany({
+            where: {
+                AND: [
+                    { tiempoCompleto: true },     // ✅ AND
+                    { NOT: { activo: false } },   // ✅ NOT (no inactivos)
+                    {
+                        OR: [                       // ✅ OR
+                            { id: { in: profesoresConMaterias } }, // dictan asignaturas
+                            { titulos: { some: {} } },             // o tienen títulos
+                        ],
+                    },
+                ],
+            },
+            include: {
+                titulos: true,
+            },
+            orderBy: { id: 'asc' },
+        });
     }
 }

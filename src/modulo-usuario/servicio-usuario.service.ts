@@ -18,14 +18,11 @@ export class ServicioUsuario {
   // ============================
   // "Listar todos los estudiantes activos junto con su carrera."
   async listarEstudiantesActivosConCarrera() {
-    // 1) Usuarios activos (estudiantes) + su inscripción activa (para obtener carreraId)
     const estudiantes = await this.prisma.usuario.findMany({
       where: {
         activo: true,
-        tipoUsuario: 'ESTUDIANTE',
-        inscripciones: {
-          some: { activo: true },
-        },
+        rol: { nombre: 'ESTUDIANTE' }, // ✅ como pidió tu docente
+        inscripciones: { some: { activo: true } },
       },
       select: {
         id: true,
@@ -50,21 +47,16 @@ export class ServicioUsuario {
       orderBy: { id: 'asc' },
     });
 
-    // 2) Tomamos los carreraId (de inscripciones activas)
     const carreraIds = [
       ...new Set(
-        estudiantes
-          .flatMap((e) => e.inscripciones.map((i) => i.carreraId))
-          .filter((id) => id !== null && id !== undefined),
+        estudiantes.flatMap((e) => e.inscripciones.map((i) => i.carreraId)),
       ),
     ];
 
-    // Si no hay carreras, devolvemos igual (pero sin carrera)
     if (carreraIds.length === 0) {
       return estudiantes.map((e) => ({ ...e, carrera: null }));
     }
 
-    // 3) Consultamos carreras en Prisma-Carrera
     const carreras = await this.prismaCarrera.carrera.findMany({
       where: { id: { in: carreraIds as number[] } },
       select: {
@@ -77,9 +69,8 @@ export class ServicioUsuario {
 
     const carreraMap = new Map(carreras.map((c) => [c.id, c]));
 
-    // 4) “Unimos” estudiante + carrera (tomando la primera inscripción activa)
     return estudiantes.map((e) => {
-      const inscripcionActiva = e.inscripciones[0]; // usualmente 1 activa
+      const inscripcionActiva = e.inscripciones[0];
       const carrera =
         inscripcionActiva?.carreraId !== undefined
           ? carreraMap.get(inscripcionActiva.carreraId) ?? null
@@ -90,35 +81,81 @@ export class ServicioUsuario {
   }
 
   // ============================
-  // CRUD EXISTENTE (tuyo)
+  // PARTE 2 – OPERADORES LÓGICOS
+  // ============================
+  // AND:
+  // Buscar estudiantes que estén:
+  // - activos
+  // - con rol ESTUDIANTE
+  // - pertenecen a una carrera específica
+  // - y estén matriculados en un ciclo específico (tu “período académico”)
+  async buscarEstudiantesActivosPorCarreraYCiclo(
+    carreraId: number,
+    cicloId: number,
+  ) {
+    return this.prisma.usuario.findMany({
+      where: {
+        AND: [
+          { activo: true },
+          { rol: { nombre: 'ESTUDIANTE' } },
+          {
+            inscripciones: {
+              some: {
+                activo: true,
+                carreraId,
+                cicloId,
+              },
+            },
+          },
+        ],
+      },
+      select: {
+        id: true,
+        nombre: true,
+        email: true,
+        activo: true,
+        rolId: true,
+        inscripciones: {
+          where: { activo: true, carreraId, cicloId },
+          select: {
+            id: true,
+            carreraId: true,
+            cicloId: true,
+            fechaInicio: true,
+            activo: true,
+          },
+        },
+      },
+      orderBy: { id: 'asc' },
+    });
+  }
+
+  // ============================
+  // CRUD EXISTENTE
   // ============================
 
-  // GET /usuarios
   obtenerTodos() {
     return this.prisma.usuario.findMany();
   }
 
-  // GET /usuarios/:id
   obtenerPorId(id: number) {
     return this.prisma.usuario.findUnique({
       where: { id },
     });
   }
 
-  // POST /usuarios
   async crear(data: CreateUsuarioDto) {
     return this.prisma.usuario.create({
       data: {
         nombre: data.nombre,
         email: data.email,
-        passwordHash: data.password, // luego lo cambiamos a hash
+        passwordHash: data.password,
         rolId: data.rolId,
         profesorId: data.profesorId ?? null,
       },
     });
   }
 
-  // PATCH /usuarios/:id
   async actualizar(id: number, data: UpdateUsuarioDto) {
     const updateData: Partial<{
       nombre: string;
@@ -130,9 +167,7 @@ export class ServicioUsuario {
 
     if (data.nombre !== undefined) updateData.nombre = data.nombre;
     if (data.email !== undefined) updateData.email = data.email;
-    if (data.password !== undefined) {
-      updateData.passwordHash = data.password; // luego lo hasheamos
-    }
+    if (data.password !== undefined) updateData.passwordHash = data.password;
     if (data.rolId !== undefined) updateData.rolId = data.rolId;
     if (data.profesorId !== undefined) updateData.profesorId = data.profesorId;
 
@@ -142,7 +177,6 @@ export class ServicioUsuario {
     });
   }
 
-  // DELETE físico /usuarios/:id
   async eliminar(id: number) {
     return this.prisma.usuario.delete({
       where: { id },
