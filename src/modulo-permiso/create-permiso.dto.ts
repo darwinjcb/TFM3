@@ -1,9 +1,10 @@
+// src/modulo-permiso/create-permiso.dto.ts:
 import { IsNotEmpty, IsOptional, IsString } from 'class-validator';
 
 export class CreatePermisoDto {
     @IsString()
     @IsNotEmpty()
-    codigo: string; // VER_CATALOGO, RESERVAR_LIBRO, etc.
+    codigo: string; // VER_CATALOGO, RESERVAR_LIBRO...
 
     @IsString()
     @IsOptional()

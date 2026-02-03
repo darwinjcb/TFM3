@@ -1,5 +1,12 @@
 // src/modulo-profesor/create-profesor.dto.ts
-import { IsEmail, IsOptional, IsString, MaxLength } from 'class-validator';
+// src/modulo-profesor/create-profesor.dto.ts
+import {
+    IsEmail,
+    IsOptional,
+    IsString,
+    IsBoolean,
+    MaxLength,
+} from 'class-validator';
 
 export class CreateProfesorDto {
     @IsString()
@@ -17,4 +24,8 @@ export class CreateProfesorDto {
     @IsString()
     @MaxLength(20)
     telefono?: string;
+
+    @IsOptional()
+    @IsBoolean()
+    tiempoCompleto?: boolean;
 }
